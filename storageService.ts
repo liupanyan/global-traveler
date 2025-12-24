@@ -1,4 +1,4 @@
-import { SavedTrip } from '../types';
+import { SavedTrip } from './types';
 
 const STORAGE_KEY = 'gp_saved_trips_v1';
 
