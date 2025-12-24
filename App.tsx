@@ -1,8 +1,8 @@
 import React, { useState, useCallback } from 'react';
-import LeafletMap from './LeafletMap'; // 修改引用路径
-import Sidebar from './Sidebar';       // 修改引用路径
-import { Destination, AIResponse, TripOption, SavedTrip } from './types'; // 修改引用路径
-import { generateTripItinerary, generateDetailedItinerary, getSingleDestination } from './geminiService'; // 修改引用路径
+import LeafletMap from './LeafletMap'; // FIX: 同级引用
+import Sidebar from './Sidebar';       // FIX: 同级引用
+import { Destination, AIResponse, TripOption, SavedTrip } from './types'; // FIX: 同级引用
+import { generateTripItinerary, generateDetailedItinerary, getSingleDestination } from './geminiService'; // FIX: 同级引用
 import { v4 as uuidv4 } from 'uuid';
 
 const INITIAL_DESTINATIONS: Destination[] = [
