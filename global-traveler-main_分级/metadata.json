@@ -1,5 +1,0 @@
-{
-  "name": "环球探路者",
-  "description": "An AI-powered travel planning application that visualizes your global itinerary on an interactive map using React, Tailwind CSS, and Leaflet.",
-  "requestFramePermissions": []
-}
