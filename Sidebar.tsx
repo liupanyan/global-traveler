@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Destination, TripOption, SavedTrip } from '../types';
-import { saveTrip, getSavedTrips, deleteTrip } from '../services/storageService';
+import { Destination, TripOption, SavedTrip } from './types'; // 修正了这里
+import { saveTrip, getSavedTrips, deleteTrip } from './storageService'; // 修正了这里
 import { v4 as uuidv4 } from 'uuid';
 import { 
   Loader2, MapPin, Navigation, Plus, Sparkles, Trash2, 
