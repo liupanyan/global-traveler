@@ -1,16 +1,13 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
-import { AIResponse, Destination } from "../types";
+import { AIResponse, Destination } from "./types"; // FIX: 引用同级目录
 
-// FIX: 必须使用 import.meta.env.VITE_API_KEY 才能在 Vercel 网页端读到 Key
 const apiKey = import.meta.env.VITE_API_KEY;
 
 if (!apiKey) {
   console.error("Missing API Key: VITE_API_KEY is not set.");
-  alert("API Key 未配置。请在 Vercel 环境变量中添加 VITE_API_KEY。");
 }
 
 const genAI = new GoogleGenerativeAI(apiKey || "");
-// 使用稳定版模型
 const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
 export const generateTripItinerary = async (prompt: string): Promise<AIResponse> => {
@@ -47,7 +44,6 @@ export const generateTripItinerary = async (prompt: string): Promise<AIResponse>
       Respond ONLY with valid JSON. Language: Chinese (Simplified).`);
 
     const text = result.response.text();
-    // 清理可能存在的 markdown 符号
     const cleanText = text.replace(/```json/g, '').replace(/```/g, '').trim();
     
     return JSON.parse(cleanText) as AIResponse;
