@@ -1,8 +1,8 @@
 import React, { useState, useCallback } from 'react';
-import LeafletMap from './LeafletMap'; // ✅ 修正：移除 components/
-import Sidebar from './Sidebar';       // ✅ 修正：移除 components/
+import LeafletMap from './LeafletMap';
+import Sidebar from './Sidebar';
 import { Destination, AIResponse, TripOption, SavedTrip } from './types';
-import { generateTripItinerary, generateDetailedItinerary, getSingleDestination } from './geminiService'; // ✅ 修正：移除 services/
+import { generateTripItinerary, generateDetailedItinerary, getSingleDestination } from './geminiService';
 import { v4 as uuidv4 } from 'uuid';
 
 const INITIAL_DESTINATIONS: Destination[] = [
@@ -91,7 +91,7 @@ const App: React.FC = () => {
     setIsGenerating(true);
     try {
       const destInfo = await getSingleDestination(name);
-      // ✅ 修正：手动展开属性，解决类型丢失问题
+      // ✅ 修正：明确赋值，防止 TS 类型报错
       const newDest: Destination = {
         id: uuidv4(),
         name: destInfo.name,
