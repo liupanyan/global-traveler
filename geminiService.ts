@@ -1,27 +1,27 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
-import { AIResponse, Destination } from "./types"; // FIX: 引用同级目录
+// @ts-ignore
+import { GoogleGenAI, Type } from "@google/genai";
+import { AIResponse, Destination } from "../types";
 
+// ✅ 修复点 1：使用 import.meta.env 读取 Vercel 的环境变量
+// @ts-ignore
 const apiKey = import.meta.env.VITE_API_KEY;
 
+// ✅ 修复点 2：增加防呆检查，如果没有 Key 会在控制台提示
 if (!apiKey) {
-  console.error("Missing API Key: VITE_API_KEY is not set.");
+  console.error("严重错误: 无法读取 VITE_API_KEY。请检查 Vercel 环境变量设置。");
 }
 
-const genAI = new GoogleGenerativeAI(apiKey || "");
-const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+// 初始化 AI
+const ai = new GoogleGenAI({ apiKey: apiKey || "" });
+
+// 使用支持 JSON Schema 的最新模型
+const MODEL_ID = "gemini-1.5-flash"; 
 
 export const generateTripItinerary = async (prompt: string): Promise<AIResponse> => {
   try {
-    const chat = model.startChat({
-      history: [
-        {
-          role: "user",
-          parts: [{ text: "You are a travel assistant. Always respond in JSON format." }],
-        },
-      ],
-    });
-
-    const result = await chat.sendMessage(`Analyze this travel request: "${prompt}".
+    const response = await ai.models.generateContent({
+      model: MODEL_ID,
+      contents: `Analyze this travel request: "${prompt}".
       
       Logic Flow:
       1. If specific (e.g., "Japan trip"), set "isAmbiguous": false. Provide "tripSummary" and "destinations".
@@ -41,11 +41,57 @@ export const generateTripItinerary = async (prompt: string): Promise<AIResponse>
            "activities": string[] 
         }]
       }
-      Respond ONLY with valid JSON. Language: Chinese (Simplified).`);
+      Respond ONLY with valid JSON. Language: Chinese (Simplified).`,
+      config: {
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            isAmbiguous: { type: Type.BOOLEAN },
+            options: {
+              type: Type.ARRAY,
+              items: {
+                type: Type.OBJECT,
+                properties: {
+                  id: { type: Type.STRING },
+                  title: { type: Type.STRING },
+                  description: { type: Type.STRING },
+                  highlight: { type: Type.STRING },
+                },
+                required: ["id", "title", "description", "highlight"],
+              },
+            },
+            tripSummary: { type: Type.STRING },
+            destinations: {
+              type: Type.ARRAY,
+              items: {
+                type: Type.OBJECT,
+                properties: {
+                  name: { type: Type.STRING },
+                  lat: { type: Type.NUMBER },
+                  lng: { type: Type.NUMBER },
+                  description: { type: Type.STRING },
+                  suggestedDays: { type: Type.NUMBER },
+                  activities: {
+                    type: Type.ARRAY,
+                    items: { type: Type.STRING }
+                  }
+                },
+                required: ["name", "lat", "lng", "description", "suggestedDays", "activities"],
+              },
+            },
+          },
+          required: ["isAmbiguous"],
+        },
+      },
+    });
 
-    const text = result.response.text();
-    const cleanText = text.replace(/```json/g, '').replace(/```/g, '').trim();
+    // 适配新版 SDK 的返回值
+    const outputText = response.text ? response.text() : "{}";
     
+    // 清理 JSON 格式 (以防 AI 返回 markdown 代码块)
+    const cleanText = outputText.replace(/```json/g, '').replace(/```/g, '').trim();
+
     return JSON.parse(cleanText) as AIResponse;
   } catch (error) {
     console.error("Gemini API Error:", error);
@@ -59,11 +105,31 @@ export const generateDetailedItinerary = async (optionTitle: string, originalPro
 
 export const getSingleDestination = async (name: string): Promise<Omit<Destination, 'id'>> => {
   try {
-    const result = await model.generateContent(`Get travel info for: "${name}". 
-    Return JSON: { "name": string, "lat": number, "lng": number, "description": string, "suggestedDays": number, "activities": string[] }`);
-    
-    const text = result.response.text();
-    const cleanText = text.replace(/```json/g, '').replace(/```/g, '').trim();
+    const response = await ai.models.generateContent({
+      model: MODEL_ID,
+      contents: `Get travel info for: "${name}". Return JSON.`,
+      config: {
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            name: { type: Type.STRING },
+            lat: { type: Type.NUMBER },
+            lng: { type: Type.NUMBER },
+            description: { type: Type.STRING },
+            suggestedDays: { type: Type.NUMBER },
+            activities: {
+              type: Type.ARRAY,
+              items: { type: Type.STRING }
+            }
+          },
+          required: ["name", "lat", "lng", "description", "suggestedDays", "activities"],
+        },
+      },
+    });
+
+    const outputText = response.text ? response.text() : "{}";
+    const cleanText = outputText.replace(/```json/g, '').replace(/```/g, '').trim();
     const data = JSON.parse(cleanText);
     
     return {
