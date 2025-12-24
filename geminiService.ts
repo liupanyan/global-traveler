@@ -1,29 +1,36 @@
-// @ts-ignore
-import { GoogleGenAI, Type } from "@google/genai";
-import { AIResponse, Destination } from "./types"; // ✅ 修正：改成 ./types (同级目录)
+import { GoogleGenerativeAI } from "@google/generative-ai";
+import { AIResponse, Destination } from "./types";
 
-// ✅ 修正：使用 import.meta.env 读取 Key
-// @ts-ignore
+// 1. 读取 API Key
 const apiKey = import.meta.env.VITE_API_KEY;
 
 if (!apiKey) {
-  console.error("严重错误: 无法读取 VITE_API_KEY。请检查 Vercel 环境变量设置。");
+  console.error("Missing API Key. Please check Vercel Environment Variables.");
 }
 
-const ai = new GoogleGenAI({ apiKey: apiKey || "" });
-const MODEL_ID = "gemini-1.5-flash"; 
+// 2. 初始化稳定版 SDK
+const genAI = new GoogleGenerativeAI(apiKey || "");
+const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
 export const generateTripItinerary = async (prompt: string): Promise<AIResponse> => {
   try {
-    const response = await ai.models.generateContent({
-      model: MODEL_ID,
-      contents: `Analyze this travel request: "${prompt}".
+    // 3. 使用 chat 模式以获得更稳定的 JSON 输出
+    const chat = model.startChat({
+      history: [
+        {
+          role: "user",
+          parts: [{ text: "You are a travel assistant. Always respond in STRICT JSON format. Do not use Markdown code blocks." }],
+        },
+      ],
+    });
+
+    const result = await chat.sendMessage(`Analyze this travel request: "${prompt}".
       
       Logic Flow:
       1. If specific (e.g., "Japan trip"), set "isAmbiguous": false. Provide "tripSummary" and "destinations".
       2. If vague (e.g., "Beach holiday"), set "isAmbiguous": true. Provide 2 distinct "options".
       
-      Output JSON Schema:
+      Output JSON Structure (Follow strictly):
       {
         "isAmbiguous": boolean,
         "options": [{ "id": string, "title": string, "description": string, "highlight": string }],
@@ -37,53 +44,14 @@ export const generateTripItinerary = async (prompt: string): Promise<AIResponse>
            "activities": string[] 
         }]
       }
-      Respond ONLY with valid JSON. Language: Chinese (Simplified).`,
-      config: {
-        responseMimeType: "application/json",
-        responseSchema: {
-          type: Type.OBJECT,
-          properties: {
-            isAmbiguous: { type: Type.BOOLEAN },
-            options: {
-              type: Type.ARRAY,
-              items: {
-                type: Type.OBJECT,
-                properties: {
-                  id: { type: Type.STRING },
-                  title: { type: Type.STRING },
-                  description: { type: Type.STRING },
-                  highlight: { type: Type.STRING },
-                },
-                required: ["id", "title", "description", "highlight"],
-              },
-            },
-            tripSummary: { type: Type.STRING },
-            destinations: {
-              type: Type.ARRAY,
-              items: {
-                type: Type.OBJECT,
-                properties: {
-                  name: { type: Type.STRING },
-                  lat: { type: Type.NUMBER },
-                  lng: { type: Type.NUMBER },
-                  description: { type: Type.STRING },
-                  suggestedDays: { type: Type.NUMBER },
-                  activities: {
-                    type: Type.ARRAY,
-                    items: { type: Type.STRING }
-                  }
-                },
-                required: ["name", "lat", "lng", "description", "suggestedDays", "activities"],
-              },
-            },
-          },
-          required: ["isAmbiguous"],
-        },
-      },
-    });
+      Respond ONLY with valid JSON. Language: Chinese (Simplified).`);
 
-    const outputText = response.text ? response.text() : "{}";
-    const cleanText = outputText.replace(/```json/g, '').replace(/```/g, '').trim();
+    const response = await result.response;
+    const text = response.text();
+    
+    // 4. 清理可能存在的 Markdown 格式
+    const cleanText = text.replace(/```json/g, '').replace(/```/g, '').trim();
+    
     return JSON.parse(cleanText) as AIResponse;
   } catch (error) {
     console.error("Gemini API Error:", error);
@@ -97,31 +65,12 @@ export const generateDetailedItinerary = async (optionTitle: string, originalPro
 
 export const getSingleDestination = async (name: string): Promise<Omit<Destination, 'id'>> => {
   try {
-    const response = await ai.models.generateContent({
-      model: MODEL_ID,
-      contents: `Get travel info for: "${name}". Return JSON.`,
-      config: {
-        responseMimeType: "application/json",
-        responseSchema: {
-          type: Type.OBJECT,
-          properties: {
-            name: { type: Type.STRING },
-            lat: { type: Type.NUMBER },
-            lng: { type: Type.NUMBER },
-            description: { type: Type.STRING },
-            suggestedDays: { type: Type.NUMBER },
-            activities: {
-              type: Type.ARRAY,
-              items: { type: Type.STRING }
-            }
-          },
-          required: ["name", "lat", "lng", "description", "suggestedDays", "activities"],
-        },
-      },
-    });
-
-    const outputText = response.text ? response.text() : "{}";
-    const cleanText = outputText.replace(/```json/g, '').replace(/```/g, '').trim();
+    const result = await model.generateContent(`Get travel info for: "${name}". 
+    Return JSON: { "name": string, "lat": number, "lng": number, "description": string, "suggestedDays": number, "activities": string[] }`);
+    
+    const response = await result.response;
+    const text = response.text();
+    const cleanText = text.replace(/```json/g, '').replace(/```/g, '').trim();
     const data = JSON.parse(cleanText);
     
     return {
