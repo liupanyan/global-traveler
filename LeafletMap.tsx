@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import L from 'leaflet';
-import { Destination } from '../types';
+import { Destination } from './types';
 
 interface LeafletMapProps {
   destinations: Destination[];
