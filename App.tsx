@@ -1,8 +1,8 @@
 import React, { useState, useCallback } from 'react';
-import LeafletMap from './LeafletMap'; // FIX: 同级引用
-import Sidebar from './Sidebar';       // FIX: 同级引用
-import { Destination, AIResponse, TripOption, SavedTrip } from './types'; // FIX: 同级引用
-import { generateTripItinerary, generateDetailedItinerary, getSingleDestination } from './geminiService'; // FIX: 同级引用
+import LeafletMap from './LeafletMap'; // ✅ 修正：移除 components/
+import Sidebar from './Sidebar';       // ✅ 修正：移除 components/
+import { Destination, AIResponse, TripOption, SavedTrip } from './types';
+import { generateTripItinerary, generateDetailedItinerary, getSingleDestination } from './geminiService'; // ✅ 修正：移除 services/
 import { v4 as uuidv4 } from 'uuid';
 
 const INITIAL_DESTINATIONS: Destination[] = [
@@ -91,9 +91,14 @@ const App: React.FC = () => {
     setIsGenerating(true);
     try {
       const destInfo = await getSingleDestination(name);
+      // ✅ 修正：手动展开属性，解决类型丢失问题
       const newDest: Destination = {
         id: uuidv4(),
-        ...destInfo
+        name: destInfo.name,
+        coordinates: destInfo.coordinates,
+        description: destInfo.description,
+        days: destInfo.days,
+        activities: destInfo.activities
       };
       setDestinations(prev => [...prev, newDest]);
     } catch (error) {
