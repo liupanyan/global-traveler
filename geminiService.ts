@@ -1,20 +1,16 @@
 // @ts-ignore
 import { GoogleGenAI, Type } from "@google/genai";
-import { AIResponse, Destination } from "../types";
+import { AIResponse, Destination } from "./types"; // ✅ 修正：改成 ./types (同级目录)
 
-// ✅ 修复点 1：使用 import.meta.env 读取 Vercel 的环境变量
+// ✅ 修正：使用 import.meta.env 读取 Key
 // @ts-ignore
 const apiKey = import.meta.env.VITE_API_KEY;
 
-// ✅ 修复点 2：增加防呆检查，如果没有 Key 会在控制台提示
 if (!apiKey) {
   console.error("严重错误: 无法读取 VITE_API_KEY。请检查 Vercel 环境变量设置。");
 }
 
-// 初始化 AI
 const ai = new GoogleGenAI({ apiKey: apiKey || "" });
-
-// 使用支持 JSON Schema 的最新模型
 const MODEL_ID = "gemini-1.5-flash"; 
 
 export const generateTripItinerary = async (prompt: string): Promise<AIResponse> => {
@@ -86,12 +82,8 @@ export const generateTripItinerary = async (prompt: string): Promise<AIResponse>
       },
     });
 
-    // 适配新版 SDK 的返回值
     const outputText = response.text ? response.text() : "{}";
-    
-    // 清理 JSON 格式 (以防 AI 返回 markdown 代码块)
     const cleanText = outputText.replace(/```json/g, '').replace(/```/g, '').trim();
-
     return JSON.parse(cleanText) as AIResponse;
   } catch (error) {
     console.error("Gemini API Error:", error);
