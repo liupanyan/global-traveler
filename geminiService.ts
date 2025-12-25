@@ -2,26 +2,25 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 import { AIResponse, Destination } from "./types";
 
 // 1. 读取 API Key
-const apiKey = import.meta.env.VITE_API_KEY;
+const apiKey = import.meta.env.VITE_GOOGLE_GENERATIVE_AI_API_KEY;
 
 if (!apiKey) {
   console.error("Missing API Key. Please check Vercel Environment Variables.");
-  console.error("Environment variable name must be: VITE_API_KEY");
+  console.error("Environment variable name must be: VITE_GOOGLE_GENERATIVE_AI_API_KEY");
 }
 
 // 2. 初始化稳定版 SDK
 const genAI = new GoogleGenerativeAI(apiKey || "");
 
-// 模型名称列表，按优先级排序
-const MODEL_NAME = "gemini-1.5-flash-latest"; // 优先使用最新版本
-// 如果上述模型不可用，可以尝试：gemini-pro, gemini-1.5-pro-latest
+// 使用最新的 gemini-2.5-flash-latest 模型
+const MODEL_NAME = "gemini-2.5-flash-latest";
 
 const model = genAI.getGenerativeModel({ model: MODEL_NAME });
 
 export const generateTripItinerary = async (prompt: string): Promise<AIResponse> => {
   // 检查 API Key
   if (!apiKey) {
-    throw new Error("API Key 未配置。请在 Vercel 环境变量中设置 VITE_API_KEY。");
+    throw new Error("API Key 未配置。请在 Vercel 环境变量中设置 VITE_GOOGLE_GENERATIVE_AI_API_KEY。");
   }
 
   try {
@@ -81,7 +80,7 @@ export const generateDetailedItinerary = async (optionTitle: string, originalPro
 export const getSingleDestination = async (name: string): Promise<Omit<Destination, 'id'>> => {
   // 检查 API Key
   if (!apiKey) {
-    throw new Error("API Key 未配置。请在 Vercel 环境变量中设置 VITE_API_KEY。");
+    throw new Error("API Key 未配置。请在 Vercel 环境变量中设置 VITE_GOOGLE_GENERATIVE_AI_API_KEY。");
   }
 
   try {

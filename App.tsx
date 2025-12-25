@@ -59,7 +59,7 @@ const App: React.FC = () => {
       console.error("Failed to generate trip", error);
       const errorMessage = error instanceof Error ? error.message : "未知错误";
       if (errorMessage.includes("API Key")) {
-        alert(errorMessage + "\n\n配置步骤：\n1. 进入 Vercel 项目设置\n2. 添加环境变量 VITE_API_KEY\n3. 重新部署项目");
+        alert(errorMessage + "\n\n配置步骤：\n1. 进入 Vercel 项目设置\n2. 添加环境变量 VITE_GOOGLE_GENERATIVE_AI_API_KEY\n3. 重新部署项目");
       } else {
         alert("生成行程失败：" + errorMessage);
       }
