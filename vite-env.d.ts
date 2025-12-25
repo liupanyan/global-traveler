@@ -1,10 +1,4 @@
 /// <reference types="vite/client" />
 
-interface ImportMetaEnv {
-  readonly VITE_GOOGLE_GENERATIVE_AI_API_KEY: string
-  // 更多环境变量...
-}
-
-interface ImportMeta {
-  readonly env: ImportMetaEnv
-}
+// 注意：API Key 现在存储在服务器端（Vercel Serverless Functions）
+// 客户端不再需要环境变量，因此不需要定义 VITE_ 环境变量

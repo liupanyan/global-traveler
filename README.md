@@ -15,11 +15,13 @@ View your app in AI Studio: https://ai.studio/apps/drive/1MWlrrs4_AssM8wy3w8Cp69
 
 1. Install dependencies:
    `npm install`
-2. Create a `.env.local` file and set the `VITE_GOOGLE_GENERATIVE_AI_API_KEY` to your Gemini API key:
+2. Create a `.env.local` file and set the `GOOGLE_GENERATIVE_AI_API_KEY` to your Gemini API key:
    ```
-   VITE_GOOGLE_GENERATIVE_AI_API_KEY=your_gemini_api_key_here
+   GOOGLE_GENERATIVE_AI_API_KEY=your_gemini_api_key_here
    ```
    Get your API key from: https://makersuite.google.com/app/apikey
+   
+   **注意**：本地开发时，API Key 存储在服务器端，不会暴露给客户端。
 3. Run the app:
    `npm run dev`
 
@@ -30,12 +32,48 @@ View your app in AI Studio: https://ai.studio/apps/drive/1MWlrrs4_AssM8wy3w8Cp69
 3. **重要：配置环境变量**
    - 在 Vercel 项目设置中，进入 "Environment Variables"
    - 添加环境变量：
-     - **Key**: `VITE_GOOGLE_GENERATIVE_AI_API_KEY`
+     - **Key**: `GOOGLE_GENERATIVE_AI_API_KEY`
      - **Value**: 你的 Gemini API Key
      - **Environment**: Production, Preview, Development (全选)
    - 保存后重新部署项目
 
-⚠️ **注意**：环境变量名称必须是 `VITE_GOOGLE_GENERATIVE_AI_API_KEY`（以 `VITE_` 开头），这样 Vite 才能在客户端代码中访问它。
+✅ **安全优势**：API Key 现在存储在服务器端（Vercel Serverless Functions），不会暴露给客户端，更加安全。
+
+### 环境变量配置问题排查
+
+如果配置了环境变量但仍然提示"API Key 未配置"，请按以下步骤排查：
+
+1. **检查环境变量名称**（区分大小写）：
+   - ✅ 正确：`GOOGLE_GENERATIVE_AI_API_KEY`
+   - ❌ 错误：`VITE_GOOGLE_GENERATIVE_AI_API_KEY`（旧版本，已不再使用）
+   - ❌ 错误：`GOOGLE_API_KEY`（名称不匹配）
+
+2. **检查环境变量作用域**：
+   - 在 Vercel 环境变量设置中，确保选择了所有环境：
+     - ✅ Production
+     - ✅ Preview  
+     - ✅ Development
+
+3. **清除缓存并重新部署**：
+   - 在 Vercel 项目设置中，进入 "Deployments"
+   - 点击最新的部署，选择 "Redeploy"
+   - 或者删除环境变量后重新添加并保存
+
+4. **查看浏览器控制台调试信息**：
+   - 打开浏览器开发者工具（F12）
+   - 查看 Console 标签
+   - 应该能看到类似以下信息：
+     ```
+     🔍 环境变量检查:
+     VITE_GOOGLE_GENERATIVE_AI_API_KEY: AIzaSyC...
+     所有 VITE_ 开头的环境变量: ["VITE_GOOGLE_GENERATIVE_AI_API_KEY", ...]
+     ```
+   - 如果看到 "未找到"，说明环境变量未正确注入
+
+5. **验证环境变量**：
+   - 在 Vercel 项目设置 → Environment Variables 中
+   - 确认变量值已正确保存（没有多余的空格）
+   - 确认 API Key 是有效的（可以从 https://makersuite.google.com/app/apikey 重新生成）
 
 ### 模型配置
 
