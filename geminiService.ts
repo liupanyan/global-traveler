@@ -6,6 +6,7 @@ const apiKey = import.meta.env.VITE_API_KEY;
 
 if (!apiKey) {
   console.error("Missing API Key. Please check Vercel Environment Variables.");
+  console.error("Environment variable name must be: VITE_API_KEY");
 }
 
 // 2. 初始化稳定版 SDK
@@ -13,6 +14,11 @@ const genAI = new GoogleGenerativeAI(apiKey || "");
 const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
 export const generateTripItinerary = async (prompt: string): Promise<AIResponse> => {
+  // 检查 API Key
+  if (!apiKey) {
+    throw new Error("API Key 未配置。请在 Vercel 环境变量中设置 VITE_API_KEY。");
+  }
+
   try {
     // 3. 使用 chat 模式以获得更稳定的 JSON 输出
     const chat = model.startChat({
@@ -64,6 +70,11 @@ export const generateDetailedItinerary = async (optionTitle: string, originalPro
 }
 
 export const getSingleDestination = async (name: string): Promise<Omit<Destination, 'id'>> => {
+  // 检查 API Key
+  if (!apiKey) {
+    throw new Error("API Key 未配置。请在 Vercel 环境变量中设置 VITE_API_KEY。");
+  }
+
   try {
     const result = await model.generateContent(`Get travel info for: "${name}". 
     Return JSON: { "name": string, "lat": number, "lng": number, "description": string, "suggestedDays": number, "activities": string[] }`);
