@@ -11,7 +11,12 @@ if (!apiKey) {
 
 // 2. 初始化稳定版 SDK
 const genAI = new GoogleGenerativeAI(apiKey || "");
-const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+
+// 模型名称列表，按优先级排序
+const MODEL_NAME = "gemini-1.5-flash-latest"; // 优先使用最新版本
+// 如果上述模型不可用，可以尝试：gemini-pro, gemini-1.5-pro-latest
+
+const model = genAI.getGenerativeModel({ model: MODEL_NAME });
 
 export const generateTripItinerary = async (prompt: string): Promise<AIResponse> => {
   // 检查 API Key
@@ -59,8 +64,12 @@ export const generateTripItinerary = async (prompt: string): Promise<AIResponse>
     const cleanText = text.replace(/```json/g, '').replace(/```/g, '').trim();
     
     return JSON.parse(cleanText) as AIResponse;
-  } catch (error) {
+  } catch (error: any) {
     console.error("Gemini API Error:", error);
+    // 如果是模型未找到错误，提供更友好的提示
+    if (error?.message?.includes("not found") || error?.message?.includes("404")) {
+      throw new Error("模型不可用。请检查 API Key 是否正确，或尝试使用其他模型。错误详情：" + error.message);
+    }
     throw error;
   }
 };
@@ -91,8 +100,12 @@ export const getSingleDestination = async (name: string): Promise<Omit<Destinati
       days: data.suggestedDays || 1,
       activities: data.activities || []
     };
-  } catch (error) {
+  } catch (error: any) {
     console.error("Gemini Single Dest Error:", error);
+    // 如果是模型未找到错误，提供更友好的提示
+    if (error?.message?.includes("not found") || error?.message?.includes("404")) {
+      throw new Error("模型不可用。请检查 API Key 是否正确，或尝试使用其他模型。错误详情：" + error.message);
+    }
     throw error;
   }
 };
